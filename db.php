@@ -1,8 +1,9 @@
 <?php
-$servername = "localhost";
-$username = "root";  // Default username for XAMPP
-$password = "";  // Default password is empty for XAMPP
-$dbname = "gym_management";  // Make sure this is the correct name of your database
+// Read environment variables (set in Azure App Service Configuration)
+$servername = getenv('DB_HOST') ?: 'localhost';
+$username   = getenv('DB_USER') ?: 'root';
+$password   = getenv('DB_PASS') ?: '';
+$dbname     = getenv('DB_NAME') ?: 'gym_management';
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -11,3 +12,4 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+?>

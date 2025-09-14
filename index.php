@@ -4,11 +4,10 @@ session_start(); // Start the session
 // Include any necessary files or database connections
 include 'db.php'; // Assuming you have a database connection here
 
-// Check if there is a success message to display
-$success_message = "";
-if (isset($_SESSION['success_message'])) {
-    $success_message = $_SESSION['success_message'];
-    unset($_SESSION['success_message']); // Clear the message after displaying it
+if ($conn->connect_error) {
+    die("❌ DB connection failed: " . $conn->connect_error);
+} else {
+    echo "<p>✅ DB Connected Successfully</p>";
 }
 ?>
 

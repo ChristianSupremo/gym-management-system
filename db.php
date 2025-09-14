@@ -1,9 +1,8 @@
 <?php
-// Azure exposes MySQL connection strings with the prefix MYSQLCONNSTR_
-$servername = getenv('MYSQLCONNSTR_DB_HOST');
-$username   = getenv('MYSQLCONNSTR_DB_USER');
-$password   = getenv('MYSQLCONNSTR_DB_PASS');
-$dbname     = getenv('MYSQLCONNSTR_DB_NAME');
+$servername = getenv('DB_HOST');
+$username   = getenv('DB_USER');
+$password   = getenv('DB_PASS');
+$dbname     = getenv('DB_NAME');
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 

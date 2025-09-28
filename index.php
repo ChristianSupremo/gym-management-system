@@ -128,82 +128,71 @@ if (isset($_SESSION['success_message'])) {
         <p>Select an option from above to view details here.</p>
     </div>
 
-    <script>
-    const successMessage = "<?php echo addslashes($success_message); ?>";
-    if (successMessage) {
-        alert(successMessage);
-    }
-
-    window.loadContent = loadContent;
-    function loadContent(page) {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("content-area").innerHTML = this.responseText;
-
-                // Re-attach any JavaScript handlers for dynamic content here
-                attachFormSubmitHandler();
-                attachDeleteHandlers();
-            }
-        };
-        xhttp.open("GET", page, true);
-        xhttp.send();
-    }
-
-    function attachDeleteHandlers() {
-        document.querySelectorAll('.delete-member-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                if (!confirm('Are you sure you want to delete this member?')) return;
-
-                const memberId = this.getAttribute('data-id');
-
-                fetch('delete_member.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'member_id=' + encodeURIComponent(memberId)
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Load content into content-area
+        function loadContent(file) {
+            fetch(file)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("content-area").innerHTML = data;
                 })
-                .then(res => res.json()) // ✅ parse JSON
+                .catch(err => console.error("Error loading content:", err));
+        }
+
+        // Event delegation for Edit / Cancel / Delete
+        document.addEventListener("click", function(e) {
+            // --- Edit button clicked ---
+            if (e.target.classList.contains("edit-btn")) {
+                const id = e.target.getAttribute("data-id");
+                const row = document.getElementById("row-" + id);
+                if (row) {
+                    row.querySelectorAll(".view-mode").forEach(el => el.style.display = "none");
+                    row.querySelectorAll(".edit-mode").forEach(el => el.style.display = "");
+                }
+            }
+
+            // --- Cancel button clicked ---
+            if (e.target.classList.contains("cancel-btn")) {
+                const row = e.target.closest("tr");
+                if (row) {
+                    row.querySelectorAll(".view-mode").forEach(el => el.style.display = "");
+                    row.querySelectorAll(".edit-mode").forEach(el => el.style.display = "none");
+                }
+            }
+
+            // --- Delete button clicked ---
+            if (e.target.classList.contains("delete-member-btn")) {
+                if (!confirm("Are you sure you want to delete this member?")) return;
+                const memberId = e.target.getAttribute("data-id");
+
+                fetch("delete_member.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: "member_id=" + encodeURIComponent(memberId)
+                })
+                .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message); // "Member deleted successfully!"
-                        loadContent('member_management.php'); // reload table inside dashboard
+                        alert(data.message);
+                        loadContent("member_management.php");
                     } else {
                         alert("Failed: " + data.message);
                     }
                 })
                 .catch(err => {
-                    console.error(err);
-                    alert('Failed to delete member.');
+                    console.error("Delete error:", err);
+                    alert("Failed to delete member.");
                 });
-            });
+            }
         });
-    }
 
-    // Function to handle form submission via AJAX
-    function attachFormSubmitHandler() {
-        const paymentForm = document.getElementById("payment-form");
-        if (paymentForm) {
-            paymentForm.onsubmit = function(event) {
-                event.preventDefault();
+        // Load default message (optional)
+        document.getElementById("content-area").innerHTML = "<p>Select an option from above to view details here.</p>";
 
-                const formData = new FormData(paymentForm);
-                var xhttp = new XMLHttpRequest();
-                xhttp.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                        alert(this.responseText);
-                        loadContent('payment_management.php'); // Reload content to reflect changes
-                    }
-                };
-                xhttp.open("POST", "payment_management.php", true);
-                xhttp.send(formData);
-            };
-        }
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('show')) {
-        loadContent(urlParams.get('show'));
-    }
+        // Make loadContent globally available (so your card onclick works)
+        window.loadContent = loadContent;
+    });
 </script>
 
 </body>

@@ -17,6 +17,7 @@ if (isset($_SESSION['success_message'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <title>Gym Management System - Dashboard</title>
     <style>
         /* Existing styles */
@@ -107,7 +108,7 @@ if (isset($_SESSION['success_message'])) {
                 <h3>Manage Members</h3>
                 <p class="ccard">View and Edit members and their Plans</p>
             </div>
-            <div class="card" onclick="loadContent('payment_management.php')">
+            <div class="card" onclick="loadContent('payment_management.php')">  
                 <h3>Track Payments</h3>
                 <p class="ccard">Record Payments</p>
             </div>
@@ -117,7 +118,7 @@ if (isset($_SESSION['success_message'])) {
             </div>
             <div class="card" onclick="loadContent('view_payments.php')">
                 <h3>View Payments</h3>
-                <p class="ccard">View Payment History</p>
+                <p class="ccard">Payment History</p>
             </div>
         </div>
     </div>
@@ -128,24 +129,54 @@ if (isset($_SESSION['success_message'])) {
     </div>
 
     <script>
+    const successMessage = "<?php echo addslashes($success_message); ?>";
+    if (successMessage) {
+        alert(successMessage);
+    }
+
+    window.loadContent = loadContent;
     function loadContent(page) {
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 document.getElementById("content-area").innerHTML = this.responseText;
 
-                // Display success message if it exists
-                const successMessage = "<?php echo addslashes($success_message); ?>";
-                if (successMessage) {
-                    alert(successMessage); // Show the success message as an alert
-                }
-
                 // Re-attach any JavaScript handlers for dynamic content here
                 attachFormSubmitHandler();
+                attachDeleteHandlers();
             }
         };
         xhttp.open("GET", page, true);
         xhttp.send();
+    }
+
+    function attachDeleteHandlers() {
+        document.querySelectorAll('.delete-member-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                if (!confirm('Are you sure you want to delete this member?')) return;
+
+                const memberId = this.getAttribute('data-id');
+
+                fetch('delete_member.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'member_id=' + encodeURIComponent(memberId)
+                })
+                .then(res => res.json()) // ✅ parse JSON
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message); // "Member deleted successfully!"
+                        loadContent('member_management.php'); // reload table inside dashboard
+                    } else {
+                        alert("Failed: " + data.message);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Failed to delete member.');
+                });
+            });
+        });
     }
 
     // Function to handle form submission via AJAX
@@ -153,13 +184,13 @@ if (isset($_SESSION['success_message'])) {
         const paymentForm = document.getElementById("payment-form");
         if (paymentForm) {
             paymentForm.onsubmit = function(event) {
-                event.preventDefault(); // Prevent the default form submission
+                event.preventDefault();
 
                 const formData = new FormData(paymentForm);
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
-                        alert(this.responseText); // Show success or error message from PHP
+                        alert(this.responseText);
                         loadContent('payment_management.php'); // Reload content to reflect changes
                     }
                 };
@@ -167,6 +198,11 @@ if (isset($_SESSION['success_message'])) {
                 xhttp.send(formData);
             };
         }
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('show')) {
+        loadContent(urlParams.get('show'));
     }
 </script>
 

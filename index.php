@@ -20,7 +20,6 @@ if (isset($_SESSION['success_message'])) {
     <link rel="stylesheet" href="style.css">
     <title>Gym Management System - Dashboard</title>
     <style>
-        /* Existing styles */
         body {
             font-family: Arial, sans-serif;
             margin: 50px;
@@ -29,25 +28,25 @@ if (isset($_SESSION['success_message'])) {
 
         .header-container {
             display: flex;
-            align-items: center; /* Align items vertically */
-            gap: 20px; /* Add spacing between elements */
-            background-color: #2F4F4F; /* Darker background color */
-            padding: 20px; /* Add some padding inside the container */
-            border-radius: 8px; /* Rounded corners (optional) */
-            flex-direction: column; /* Stack elements vertically */
+            align-items: center;
+            gap: 20px;
+            background-color: #2F4F4F;
+            padding: 20px;
+            border-radius: 8px;
+            flex-direction: column;
         }
 
         h1 {
-            margin: 0; /* Remove default margin */
-            border: 2px solid #333; /* Box around the h1 */
-            padding: 10px; /* Add padding inside the h1 box */
-            border-radius: 5px; /* Rounded corners for the h1 box (optional) */
-            background-color: #4B4B4B; /* Optional background color for h1 */
-            color: #FFF; /* Make the text color white for contrast */
+            margin: 0;
+            border: 2px solid #333;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #4B4B4B;
+            color: #FFF;
         }
 
         h2 {
-            margin: 0; /* Remove default margin */
+            margin: 0;
             color: #FDFD96;
             font-size: 18px;
         }
@@ -56,7 +55,7 @@ if (isset($_SESSION['success_message'])) {
             display: flex;
             justify-content: center;
             gap: 20px;
-            margin-top: 20px; /* Add space above the dashboard */
+            margin-top: 20px;
         }
 
         .card {
@@ -74,11 +73,11 @@ if (isset($_SESSION['success_message'])) {
             background-color: #FFF275;
             border: 4px solid #FFF275;
             font-weight: bold;
-            color: #191970; /* Change the text color of direct children elements */
+            color: #191970;
         }
 
         .card:hover .ccard {
-            color: #191970; /* Ensure that .ccard elements also change color */
+            color: #191970;
         }
 
         #content-area {
@@ -140,7 +139,7 @@ if (isset($_SESSION['success_message'])) {
                 .catch(err => console.error("Error loading content:", err));
         }
 
-        // Event delegation for Edit / Cancel / Delete
+        // Event delegation for ALL dynamic buttons
         document.addEventListener("click", function(e) {
             // --- Edit button clicked ---
             if (e.target.classList.contains("edit-btn")) {
@@ -152,7 +151,7 @@ if (isset($_SESSION['success_message'])) {
                 }
             }
 
-            // --- Cancel button clicked ---
+            // --- Cancel inline edit ---
             if (e.target.classList.contains("cancel-btn")) {
                 const row = e.target.closest("tr");
                 if (row) {
@@ -185,13 +184,62 @@ if (isset($_SESSION['success_message'])) {
                     alert("Failed to delete member.");
                 });
             }
+
+            // --- Select button clicked (open modal) ---
+            if (e.target.classList.contains("select-btn")) {
+                const data = JSON.parse(e.target.getAttribute("data-member"));
+
+                // Fill modal fields
+                document.getElementById("MembershipID").value = data.MembershipID;
+                document.getElementById("memberName").innerText = data.Name;
+                document.getElementById("planName").innerText = data.PlanName;
+                document.getElementById("amount").value = data.Rate;
+
+                // Default payment date = today
+                const today = new Date().toISOString().split("T")[0];
+                document.getElementById("paymentDate").value = today;
+
+                // Due date = today + Duration
+                const payDate = new Date(today);
+                payDate.setDate(payDate.getDate() + parseInt(data.Duration));
+                document.getElementById("dueDate").value = payDate.toISOString().split("T")[0];
+
+                // Show modal
+                document.getElementById("paymentModal").style.display = "block";
+            }
+
+            // --- Close modal ---
+            if (e.target.classList.contains("close-btn") || e.target.id === "cancelPayment") {
+                document.getElementById("paymentModal").style.display = "none";
+            }
         });
 
-        // Load default message (optional)
-        document.getElementById("content-area").innerHTML = "<p>Select an option from above to view details here.</p>";
+        // Close modal if clicking outside
+        window.onclick = function(e) {
+            const modal = document.getElementById("paymentModal");
+            if (modal && e.target === modal) {
+                modal.style.display = "none";
+            }
+        };
+
+        // Filtering (delegate to keyup globally)
+        document.addEventListener("keyup", function(e) {
+            if (e.target.id === "searchInput") {
+                let input = e.target.value.toLowerCase();
+                let rows = document.querySelectorAll("#memberTable tbody tr");
+                rows.forEach(row => {
+                    let name = row.cells[0].textContent.toLowerCase();
+                    row.style.display = name.includes(input) ? "" : "none";
+                });
+            }
+        });
 
         // Make loadContent globally available (so your card onclick works)
         window.loadContent = loadContent;
+
+        // Load default message
+        document.getElementById("content-area").innerHTML =
+            "<p>Select an option from above to view details here.</p>";
     });
 </script>
 
